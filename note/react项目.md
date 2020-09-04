@@ -267,7 +267,7 @@ export default class Subject extends Component {
 
 - 树形列表
 
-  -  table的可展开与树形数据展示例子
+  -  table树形数据展示例子
   -  table的expandable属性配置
      -  expandedRowKeys: 展开行的key的数组, 控制属性
      -  onExpandedRowsChange: 展开的行变化时触发
