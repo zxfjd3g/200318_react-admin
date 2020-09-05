@@ -39,7 +39,9 @@
 1. 克隆 server 仓库: https://github.com/zxfjd3g/react-admin-server
 2. npm i 下载所有依赖包
 3. 启动服务器: npm start, 端口号是5000
-4. **初始化 / 重置** 本地数据库数据: **npm run reset**
+4. **初始化 / 重置** 本地数据库数据: 
+   1. **npm run reset**
+   2. 使用mongodb客户端工具导入mongodb的json数据文件
 5. 指定前端项目代理的目标服务器地址为:  http://localhost:5000
    - package.json --> proxy --> http://localhost:5000
 
@@ -53,12 +55,14 @@
 
 ### 开发组件流程(新建分类组件演示)
 
-1. 新建路由组件Subject
-2. 在config/asyncComps.js中引入
-3. 在页面中权限管理/菜单管理中添加
+1. 新建路由组件Subject: pages/Edu/Subject/index.jsx
+2. 在config/asyncComps.js中引入并暴露
+3. 在菜单管理中给 教育管理 添加 分类管理 子菜单 
    1. 菜单名: 分类管理
    2. 访问路径 /subject/list
    3. 组件名称: Subject
+4. 在 角色管理 给当前用户对应的角色添加 分类管理 的权限
+5. 后面就可以在Subject的路由组件中完成功能
 
 
 
@@ -280,11 +284,17 @@ export default class Subject extends Component {
   subjectList.items.forEach(item => item.children = [])
   ```
 
-- 配置table的expandable属性
+- 功能列表
 
   -  动态加载/请求二级分类列表显示
   -  如果没有二级分类, 去掉展开图标
-
+-  解决翻页时可能会自动展开
+     -  原因: table内部自动保存了我们点击展开的所有行的key的数组, 翻页也还在
+     -  我们通过expandedRowKeys来控制控制哪一行展开
+        -  将expandedRowKeys传递给expandable
+        -  在handleExpandedRowsChange回调中保存最新的expandedRowKeys
+        -  当翻页时清空expandedRowKeys(在getSubjectList中处理)
+  
   ```javascript
   <Table         
       ...

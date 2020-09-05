@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import {Card, Button, Table, Tooltip} from 'antd'
+import {Card, Button, Table, Tooltip, Modal, Form, Select, Input} from 'antd'
 import {
   PlusOutlined,
   EditOutlined,
@@ -24,6 +24,7 @@ export default class Subject extends Component {
     },
     loading: false, // 是否正在加载中
     expandedRowKeys: [], // 存储所有要打开的行的key的数组
+    isShowAdd: true, // 是否显示添加的对话框
   }
 
   componentDidMount () {
@@ -126,7 +127,7 @@ export default class Subject extends Component {
   render() {
 
     // 取出数据
-    const {subjectList: {total, items}, page, pageSize, loading, expandedRowKeys} = this.state
+    const {subjectList: {total, items}, page, pageSize, loading, expandedRowKeys, isShowAdd} = this.state
 
     // card左上角标题
     const title = <Button type="primary" icon={<PlusOutlined/>}>添加新分类</Button>
@@ -142,7 +143,7 @@ export default class Subject extends Component {
         title: '操作',
         key: 'action',
         // dataIndex: 'age',
-        render: () => (
+        render: (text, record, index) => (
           <>
             <Tooltip placement="top" title='修改分类'>
               <Button type="primary" icon={<EditOutlined/>} className="subject-btn-edit"></Button>
@@ -181,6 +182,68 @@ export default class Subject extends Component {
             onExpandedRowsChange: this.onExpandedRowsChange
           }}
         />
+        
+
+
+        <Modal
+          visible={isShowAdd}
+          title="添加分类"
+          onCancel={() => {
+            this.setState({
+              isShowAdd: false
+            })
+          }}
+          onOk={() => {
+            // form
+            //   .validateFields()
+            //   .then(values => {
+            //     form.resetFields();
+            //     onCreate(values);
+            //   })
+            //   .catch(info => {
+            //     console.log('Validate Failed:', info);
+            //   });
+          }}
+        >
+          <Form
+            
+            layout="horizontal"
+            initialValues={{
+              title: '',
+              parentId: '0'
+            }}
+          >
+            <Form.Item
+              name="parentId"
+              label="父级分类"
+              rules={[
+                {
+                  required: true,
+                  message: '必须选择父级分类',
+                },
+              ]}
+            >
+              <Select placeholder="请选择">
+                <Select.Option value="0">一级分类</Select.Option>
+                <Select.Option value="2">aa</Select.Option>
+                <Select.Option value="3">bb</Select.Option>
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name="title"
+              label="分类名称"
+              rules={[
+                {
+                  required: true,
+                  message: '必须输入分类名称',
+                },
+              ]}
+            >
+              <Input placeholder="分类名称"/>
+            </Form.Item>
+            
+          </Form>
+        </Modal>
       </Card>
     )
   }
