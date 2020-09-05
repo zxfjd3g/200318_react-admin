@@ -4,16 +4,20 @@ import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-
+  ExclamationCircleOutlined
 } from '@ant-design/icons' // 实现对内置图标的按需引入打包
 import {
   reqSubjectList, 
   reqAllSubSubjectList, 
   reqAllSubjectList, 
-  reqAddSubject
+  reqAddSubject,
+  reqUpdateSubject,
+  reqDeleteSubject
 } from '@/api/edu/subject'
 
+const { confirm } = Modal // 一定要在所有import之后
 import './index.less'
+
 
 /* 
 分类管理的路由组件
@@ -89,55 +93,62 @@ export default class Subject extends Component {
     console.log('onExpand', expanded, record)
     // 如果当前是展开
     if (expanded) {
-      // 请求获取当前分类的子分类列表
-      const {items} = await reqAllSubSubjectList(record._id)  // 返回数据的结构{items, total}
-      // 指定为当前分类的children
-      /* 
-      方式一: 直接修改state中的数据, 再setState(原本的外层值)  ==> 错误的, 如果是PureComponent会发现没有变化(内部做的浅比较)
-      */
-      record.children = items // 不要直接修改状态数据
-      this.setState({
-        subjectList: this.state.subjectList
-      })
-
-      /* 
-      方式二: 直接修改state中的数据, 再setState(新的外层值)  ==> 可以的, PureComponent会发现有变化(内部做的浅比较)
-        不是特别好
-      */
-      record.children = items // 不要直接修改状态数据
-      this.setState({
-        subjectList: {...this.state.subjectList}
-      })
-
-      /* 
-      方式三: 完全产生一个新的数据, 再setState指定这个新数据
-      */
-     const subjectList = this.state.subjectList
-      this.setState({
-        subjectList: {
-          total: subjectList.total,
-          items: subjectList.items.map(item => {
-            // 当前要修改的item, 需要返回一个新的item, 其它的直接返回
-            if (record._id===item._id) {
-              // 有子分类
-              if (items.length>0) {
-                // item.children = items  // 不可以, 因为在直接修改状态数据
-                return {...item, children: items}
-              } else {
-                // delete item.children // 不可以, 因为在直接修改状态数据
-                const {children, ...restItem} = item  // restItem是item中除了children外的一个浅拷贝
-                // const {...item2} = item
-                // delete item2.children
-                return restItem
-              }
-            } 
-            return item
-          })
-        }
-      })
-
+      this.getAllSubSubjectList(record)
     }
   }
+
+  /* 
+  获取指定一级分类的所有二级列表显示
+  record: 一级分类对象
+  */
+  getAllSubSubjectList = async (record) => {
+    // 请求获取当前分类的子分类列表
+    const {items} = await reqAllSubSubjectList(record._id)  // 返回数据的结构{items, total}
+    // 指定为当前分类的children
+    /* 
+    方式一: 直接修改state中的数据, 再setState(原本的外层值)  ==> 错误的, 如果是PureComponent会发现没有变化(内部做的浅比较)
+    */
+    record.children = items // 不要直接修改状态数据
+    this.setState({
+      subjectList: this.state.subjectList
+    })
+
+    /* 
+    方式二: 直接修改state中的数据, 再setState(新的外层值)  ==> 可以的, PureComponent会发现有变化(内部做的浅比较)
+      不是特别好
+    */
+    record.children = items // 不要直接修改状态数据
+    this.setState({
+      subjectList: {...this.state.subjectList}
+    })
+
+    /* 
+    方式三: 完全产生一个新的数据, 再setState指定这个新数据
+    */
+    const subjectList = this.state.subjectList
+    this.setState({
+      subjectList: {
+        total: subjectList.total,
+        items: subjectList.items.map(item => {
+          // 当前要修改的item, 需要返回一个新的item, 其它的直接返回
+          if (record._id===item._id) {
+            // 有子分类
+            if (items.length>0) {
+              // item.children = items  // 不可以, 因为在直接修改状态数据
+              return {...item, children: items}
+            } else {
+              // delete item.children // 不可以, 因为在直接修改状态数据
+              const {children, ...restItem} = item  // restItem是item中除了children外的一个浅拷贝
+              // const {...item2} = item
+              // delete item2.children
+              return restItem
+            }
+          } 
+          return item
+        })
+      }
+    })
+  } 
 
   /* 
   获取所有一级分类列表
@@ -188,6 +199,82 @@ export default class Subject extends Component {
         })
   }
 
+
+  /* 
+  更新分类
+  */
+  updateSubject = async (record) => {
+
+    const {subjectId, subjectTitle} = this.state
+    // 处理特别情况1: 没有输入
+    if (subjectTitle==='') {
+      message.warn('必须输入名称')
+      this.inputRef.current.focus()
+      return
+    }
+    // 处理特别情况2: 没有改变
+    if (subjectTitle===record.title) {
+      message.warn('没有改变, 不能更新')
+      this.inputRef.current.focus()
+      return
+    }
+    // 提交更新的请求
+    await reqUpdateSubject(subjectId, subjectTitle)
+    // 提示
+    message.success('更新成功')
+    record.title = subjectTitle
+    // 变为列表查看模式
+    this.setState({
+      subjectId: '',
+      subjectTitle: ''
+    })
+
+    // 如果更新的是一级分类列表
+    if (record.parentId==='0') { // record是一级分类
+      // 重新获取当前页的一级分类列表显示
+      this.getSubjectList()
+    } else { // 如果更新的是二级分类列表    record是二级分类
+      // 找到当前二级分类的父分类对象
+      const parentRecord = this.state.subjectList.items.find(item => item._id===record.parentId)
+      // 重新获取当前子列表显示
+      this.getAllSubSubjectList(parentRecord)
+    }
+  }
+
+  /* 
+  删除分类
+  */
+ deleteSubject = (record) => {
+   return () => {
+    confirm({
+      title: `确定删除 ${record.title} 吗?`,
+      icon: <ExclamationCircleOutlined />,
+      content: '谨慎删除, 不可恢复',
+      onOk: async () => {
+        // 删除当前分类
+        await reqDeleteSubject(record._id)
+        // 提示成功
+        message.success('删除成功!')
+
+        if (record.parentId==='0') {
+          // 重新获取列表显示
+          const {page, subjectList:{items}} = this.state
+          this.getSubjectList(items.length===1 && page>1 ? page-1 : page)
+        } else {
+           // 找到当前二级分类的父分类对象
+          const parentRecord = this.state.subjectList.items.find(item => item._id===record.parentId)
+          // 重新获取当前子列表显示
+          this.getAllSubSubjectList(parentRecord)
+        }
+      },
+      onCancel() {
+        console.log('Cancel');
+      },
+    });
+   }
+ }
+
+
   // 比放在render中要好一些, 数组只创建一次
   columns = [
     {
@@ -222,7 +309,11 @@ export default class Subject extends Component {
         if (this.state.subjectId===record._id) {
           return (
             <>
-              <Button type="primary" className="subject-btn-edit">确定</Button>
+              <Button 
+                type="primary" 
+                className="subject-btn-edit"
+                onClick={() => this.updateSubject(record)}
+              >确定</Button>
               <Button onClick={() => {
                 this.setState({
                   subjectId: '',
@@ -250,13 +341,11 @@ export default class Subject extends Component {
                 />
               </Tooltip>
               <Tooltip placement="top" title='删除分类'>
-                <Button type="danger" icon={<DeleteOutlined/>}></Button>
+                <Button type="danger" icon={<DeleteOutlined/>} onClick={this.deleteSubject(record)}></Button>
               </Tooltip>
             </>
           )
         }
-
-        
       }
     },
   ]
