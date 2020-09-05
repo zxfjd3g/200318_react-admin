@@ -1,12 +1,17 @@
 import React, { Component } from 'react'
-import {Card, Button, Table, Tooltip, Modal, Form, Select, Input} from 'antd'
+import {Card, Button, Table, Tooltip, Modal, Form, Select, Input, message} from 'antd'
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
 
 } from '@ant-design/icons' // 实现对内置图标的按需引入打包
-import {reqSubjectList, reqAllSubSubjectList} from '@/api/edu/subject'
+import {
+  reqSubjectList, 
+  reqAllSubSubjectList, 
+  reqAllSubjectList, 
+  reqAddSubject
+} from '@/api/edu/subject'
 
 import './index.less'
 
@@ -22,10 +27,15 @@ export default class Subject extends Component {
       items: [], // 当前页的数组
       total: 0,  // 总数量
     },
+    allSubjectList: [], // 所有分类的数组
     loading: false, // 是否正在加载中
     expandedRowKeys: [], // 存储所有要打开的行的key的数组
-    isShowAdd: true, // 是否显示添加的对话框
+    isShowAdd: false, // 是否显示添加的对话框
+    confirmLoading: false, // 是否显示确定按钮的loading
   }
+
+  // 用于保存<form>的ref容器
+  formRef = React.createRef()
 
   componentDidMount () {
     // 获取第一页显示
@@ -124,13 +134,78 @@ export default class Subject extends Component {
     }
   }
 
+  /* 
+  获取所有一级分类列表
+  */
+  getAllSubjectList = async () => {
+    const allSubjectList = await reqAllSubjectList()
+    this.setState({
+      allSubjectList
+    })
+  }
+
+  /* 
+  添加分类
+  */
+  addSubject = () => {
+
+    // 得到form对象
+    const form = this.formRef.current
+    // 对表单进行校验
+    form.validateFields()
+        // .then(values => { // values是包含收集的title/parentId数据的对象
+        .then(async ({parentId, title}) => {
+          form.resetFields();
+
+          this.setState({
+            confirmLoading: true
+          })
+
+          try {
+            // 发送添加分类的请求
+            await reqAddSubject(title, parentId)
+
+            // 提示添加成功
+            message.success('保存分类成功')
+
+            // 关闭对话框
+            this.setState({
+              isShowAdd: false,
+            })
+
+            // 重新获取分类列表
+            this.getSubjectList(1)
+          } finally {// 无论请求成功或失败都要让确认按钮的loading隐藏
+            this.setState({
+              confirmLoading: false
+            })
+          }
+        })
+  }
+
   render() {
 
     // 取出数据
-    const {subjectList: {total, items}, page, pageSize, loading, expandedRowKeys, isShowAdd} = this.state
+    const {
+      subjectList: {total, items}, 
+      page, 
+      pageSize, 
+      loading, 
+      expandedRowKeys, 
+      isShowAdd, 
+      allSubjectList,
+      confirmLoading
+    } = this.state
 
     // card左上角标题
-    const title = <Button type="primary" icon={<PlusOutlined/>}>添加新分类</Button>
+    const title = <Button 
+        type="primary" 
+        icon={<PlusOutlined/>} 
+        onClick={() => {
+          this.setState({isShowAdd: true})
+          this.getAllSubjectList()
+        }}
+      >添加新分类</Button>
 
     const columns = [
       {
@@ -186,6 +261,7 @@ export default class Subject extends Component {
 
 
         <Modal
+          confirmLoading={confirmLoading}
           visible={isShowAdd}
           title="添加分类"
           onCancel={() => {
@@ -193,20 +269,10 @@ export default class Subject extends Component {
               isShowAdd: false
             })
           }}
-          onOk={() => {
-            // form
-            //   .validateFields()
-            //   .then(values => {
-            //     form.resetFields();
-            //     onCreate(values);
-            //   })
-            //   .catch(info => {
-            //     console.log('Validate Failed:', info);
-            //   });
-          }}
+          onOk={this.addSubject}
         >
           <Form
-            
+            ref={this.formRef}
             layout="horizontal"
             initialValues={{
               title: '',
@@ -225,8 +291,9 @@ export default class Subject extends Component {
             >
               <Select placeholder="请选择">
                 <Select.Option value="0">一级分类</Select.Option>
-                <Select.Option value="2">aa</Select.Option>
-                <Select.Option value="3">bb</Select.Option>
+                {
+                  allSubjectList.map(s => <Select.Option value={s._id} key={s._id}>{s.title}</Select.Option>)
+                }
               </Select>
             </Form.Item>
             <Form.Item
