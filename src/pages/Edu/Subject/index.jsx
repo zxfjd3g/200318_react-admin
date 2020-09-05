@@ -32,10 +32,15 @@ export default class Subject extends Component {
     expandedRowKeys: [], // 存储所有要打开的行的key的数组
     isShowAdd: false, // 是否显示添加的对话框
     confirmLoading: false, // 是否显示确定按钮的loading
+
+    subjectId: '', // 要修改分类的id
+    subjectTitle: '', // 输入的分类名称
   }
 
-  // 用于保存<form>的ref容器
+  // 用于保存<Form>的ref容器
   formRef = React.createRef()
+  // 用于保存<Input>的ref容器
+  inputRef = React.createRef()
 
   componentDidMount () {
     // 获取第一页显示
@@ -156,7 +161,7 @@ export default class Subject extends Component {
         // .then(values => { // values是包含收集的title/parentId数据的对象
         .then(async ({parentId, title}) => {
           form.resetFields();
-
+          // 显示按钮loading
           this.setState({
             confirmLoading: true
           })
@@ -183,6 +188,79 @@ export default class Subject extends Component {
         })
   }
 
+  // 比放在render中要好一些, 数组只创建一次
+  columns = [
+    {
+      title: '分类名称',
+      dataIndex: 'title',
+      key: 'title',
+      render: (title, record, index) => {
+
+        // 返回input显示
+        if (this.state.subjectId===record._id) {
+          return <Input 
+            ref={this.inputRef}
+            defaultValue={title} 
+            className="subject-input-edit"
+            onChange={(e) => { // 实时收集输入数据到subjectTitle
+              this.setState({
+                subjectTitle: e.target.value.trim()
+              })
+            } }
+          />
+        }
+        // 返回title显示
+        return title
+      }
+    },
+    {
+      width: '30%',
+      title: '操作',
+      key: 'action',
+      // dataIndex: 'age',
+      render: (text, record, index) => {
+        if (this.state.subjectId===record._id) {
+          return (
+            <>
+              <Button type="primary" className="subject-btn-edit">确定</Button>
+              <Button onClick={() => {
+                this.setState({
+                  subjectId: '',
+                  subjectTitle: ''
+                })
+              }}>取消</Button>
+            </>
+          )
+        } else {
+          return (
+            <>
+              <Tooltip placement="top" title='修改分类'>
+                <Button 
+                  type="primary" 
+                  icon={<EditOutlined/>} 
+                  className="subject-btn-edit"
+                  onClick={() => {
+                    this.setState({
+                      subjectId: record._id,
+                      subjectTitle: record.title
+                    }, () => { // 回调函数在组件更新之后自动调用  ==> 相当于nextTick()
+                      this.inputRef.current.focus() // 自动获取焦点
+                    })
+                  }}
+                />
+              </Tooltip>
+              <Tooltip placement="top" title='删除分类'>
+                <Button type="danger" icon={<DeleteOutlined/>}></Button>
+              </Tooltip>
+            </>
+          )
+        }
+
+        
+      }
+    },
+  ]
+
   render() {
 
     // 取出数据
@@ -207,30 +285,6 @@ export default class Subject extends Component {
         }}
       >添加新分类</Button>
 
-    const columns = [
-      {
-        title: '分类名称',
-        dataIndex: 'title',
-        key: 'title',
-      },
-      {
-        width: '30%',
-        title: '操作',
-        key: 'action',
-        // dataIndex: 'age',
-        render: (text, record, index) => (
-          <>
-            <Tooltip placement="top" title='修改分类'>
-              <Button type="primary" icon={<EditOutlined/>} className="subject-btn-edit"></Button>
-            </Tooltip>
-            <Tooltip placement="top" title='删除分类'>
-              <Button type="danger" icon={<DeleteOutlined/>}></Button>
-            </Tooltip>
-          </>
-        )
-      },
-    ];
-    
 
     return (
       <Card title={title} className="subject">
@@ -238,7 +292,7 @@ export default class Subject extends Component {
           bordered
           loading={loading}
           dataSource={items} 
-          columns={columns}
+          columns={this.columns}
           rowKey="_id"
           pagination={{
             current: page,
@@ -258,8 +312,6 @@ export default class Subject extends Component {
           }}
         />
         
-
-
         <Modal
           confirmLoading={confirmLoading}
           visible={isShowAdd}
@@ -273,10 +325,16 @@ export default class Subject extends Component {
         >
           <Form
             ref={this.formRef}
+            labelCol={{
+              span: 6,
+            }}
+            wrapperCol={{
+              span: 14,
+            }}
             layout="horizontal"
             initialValues={{
               title: '',
-              parentId: '0'
+              parentId: undefined  // 或者不指定   Select与Input对placeholder处理不太一样
             }}
           >
             <Form.Item
