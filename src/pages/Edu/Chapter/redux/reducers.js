@@ -4,7 +4,8 @@
 
 import {
   GET_ALL_COURSE_LIST,
-  GET_CHAPTER_LIST
+  GET_CHAPTER_LIST,
+  GET_LESSON_LIST
 } from './constants'
 import {DEFAULT_PAGE_SIZE} from '@/config/constants'
 
@@ -30,6 +31,29 @@ export default function chapter (preState = initChapter, action) {
 
       return {...preState, courseId, chapterList, pageSize, page}
       // return {allCourseList: preState.allCourseList, courseId, chapterList}
+    case GET_LESSON_LIST:
+      const {chapterId, lessonList} = action.data
+
+
+
+      return {
+        ...preState, 
+        chapterList: {
+          total: preState.chapterList.total,
+          items: preState.chapterList.items.map(chapter => {
+            if (chapter._id===chapterId) {
+              // 章节下有课时
+              if (lessonList.length>0) {
+                return {...chapter, children: lessonList}
+              }
+              // 章节下没课时
+              const {children, ...restChapter} = chapter
+              return restChapter
+            }
+            return chapter
+          })
+        }
+      }
     default:
       return preState;
   }

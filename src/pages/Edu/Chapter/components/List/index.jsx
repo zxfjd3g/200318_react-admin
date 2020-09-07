@@ -17,7 +17,7 @@ import {
   DeleteOutlined,
 } from '@ant-design/icons' // 实现对内置图标的按需引入打包
 
-import {getChapterList} from '../../redux'
+import {getChapterList, getLessonList} from '../../redux'
 import {DEFAULT_PAGE_SIZE} from '@/config/constants'
 
 import './index.less'
@@ -28,11 +28,13 @@ function List ({
   chapterList: {total, items},
   courseId,
 
-  getChapterList
+  getChapterList,
+  getLessonList
 }) {
 
   // const [page, setPage] = useState(1)  // 将page交给redux管理
   const [loading, setLoading] = useState(false)
+  const [expandedRowKeys, setExpandedRowKeys] = useState([])
 
   const columns = [
     {
@@ -91,7 +93,24 @@ function List ({
   const getChapters = async (p=page, ps=pageSize) => {
     setLoading(true)
     await getChapterList({page: p, pageSize: ps, courseId})
+    setExpandedRowKeys([])
     setLoading(false)
+  }
+
+  /* 
+  点击展开图标时触发
+  */
+  const onExpand = (expanded, record) => {
+    if (expanded) {
+      getLessonList(record._id)
+    }
+  }
+
+  /* 
+  行展开发生变化时触发
+  */
+  const onExpandedRowsChange = (expandedRowKeys) => {
+    setExpandedRowKeys(expandedRowKeys)
   }
 
   return (
@@ -118,6 +137,12 @@ function List ({
           onChange: getChapters,
           onShowSizeChange: (current, pageSize) => getChapters(1, pageSize),
         }}
+
+        expandable={{
+          expandedRowKeys,	// 展开的行，控制属性
+          onExpand,	//点击展开图标时触发	function(expanded, record)
+          onExpandedRowsChange, // 行展开变化时触发
+        }}
       />
     </Card>
   )
@@ -131,6 +156,7 @@ export default connect(
     courseId: state.chapter.courseId,
   }),
   {
-    getChapterList
+    getChapterList,
+    getLessonList
   }
 )(List)

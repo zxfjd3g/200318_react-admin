@@ -4,6 +4,7 @@
 import {
   GET_ALL_COURSE_LIST,
   GET_CHAPTER_LIST,
+  GET_LESSON_LIST
 } from './constants'
 import {
   reqAllCourseList
@@ -11,6 +12,9 @@ import {
 import {
   reqChapterList
 } from '@/api/edu/chapter'
+import {
+  reqLessonList
+} from '@/api/edu/lesson'
 
 
 /* 
@@ -41,6 +45,23 @@ export const getChapterList = ({ page, pageSize, courseId }) => {
       .then((chapterList) => {
         dispatch(getChapterListSync({courseId, page, pageSize, chapterList}))
         return chapterList
+      })
+  }
+}
+
+/* 
+获取指定章节下的课时列表
+*/
+const getLessonListSync = ({chapterId, lessonList}) => ({ 
+  type: GET_LESSON_LIST, 
+  data: {chapterId, lessonList}
+}) 
+
+export const getLessonList = (chapterId) => {
+  return dispatch => {
+    return reqLessonList(chapterId)
+      .then((lessonList) => {
+        dispatch(getLessonListSync({chapterId, lessonList}))
       })
   }
 }
