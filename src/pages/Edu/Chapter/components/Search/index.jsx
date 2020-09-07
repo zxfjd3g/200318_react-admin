@@ -6,11 +6,12 @@ import {
   Card,
   Form,
   Select,
-  Button
+  Button,
+  message
 } from 'antd'
 import {connect} from 'react-redux'
 
-import { getAllCourseList } from '../../redux'
+import { getAllCourseList, getChapterList } from '../../redux'
 
 const {Option} = Select
 
@@ -18,7 +19,10 @@ import './index.less'
 
 function Search ({ // 解构props
   allCourseList,
-  getAllCourseList
+  pageSize,
+
+  getAllCourseList,
+  getChapterList
 }) {
   const [form] = Form.useForm()
 
@@ -31,8 +35,15 @@ function Search ({ // 解构props
   /* 
   表单校验成功后调用
   */
-  const onFinish = (values) => {
-
+  const onFinish = async ({courseId}) => {
+    // 分发获取章节分页列表的异步action
+    const chapterList = await getChapterList({ page: 1, pageSize, courseId })  
+    // dispatch(异步action)返回的是一个promise对象, 其结果由异步action返回的promise来决定
+    /* function fn(...args) {
+      return dispatch(getChapterList(...args))
+    } */
+    console.log('chapterList', chapterList)
+    message.success('搜索章节列表成功')
   }
 
   return (
@@ -73,9 +84,11 @@ function Search ({ // 解构props
 
 export default connect(
   state => ({
-    allCourseList: state.chapter.allCourseList
+    allCourseList: state.chapter.allCourseList,
+    pageSize: state.chapter.pageSize,
   }),  // 指定一般属性
   {
-    getAllCourseList
+    getAllCourseList,
+    getChapterList
   }  // 指定函数属性, 直接放入action
 )(Search)

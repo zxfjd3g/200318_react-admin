@@ -4,6 +4,7 @@
 // 引入reducer
 import chapter from './reducers'
 // 引入action
-import {getAllCourseList} from './actions'
+import {getAllCourseList, getChapterList} from './actions'
 
-export {chapter, getAllCourseList}
+// 向外暴露reducer和action
+export {chapter, getAllCourseList, getChapterList}
