@@ -231,6 +231,22 @@ export default function Subject (props) {
           // 重新获取当前子列表显示
           getAllSubSubjectList(parentRecord)
         }
+
+
+        // return reqDeleteSubject(record._id).then(()=> {
+        //   // 提示成功
+        //   message.success('删除成功!')
+
+        //   if (record.parentId==='0') {
+        //     // 重新获取列表显示
+        //     getSubjectList(subjectList.items.length===1 && page>1 ? page-1 : page)
+        //   } else {
+        //     // 找到当前二级分类的父分类对象
+        //     const parentRecord = subjectList.items.find(item => item._id===record.parentId)
+        //     // 重新获取当前子列表显示
+        //     getAllSubSubjectList(parentRecord)
+        //   }
+        // })
       },
       onCancel() {
         console.log('Cancel');
