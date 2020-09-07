@@ -39,7 +39,7 @@ function Search ({ // 解构props
     // 分发获取章节分页列表的异步action
     const chapterList = await getChapterList({ page: 1, pageSize, courseId })  
     // dispatch(异步action)返回的是一个promise对象, 其结果由异步action返回的promise来决定
-    /* function fn(...args) {
+    /* function getChapterList(...args) {
       return dispatch(getChapterList(...args))
     } */
     console.log('chapterList', chapterList)
@@ -75,7 +75,7 @@ function Search ({ // 解构props
             >
               搜索
             </Button>
-            <Button>取消</Button>
+            <Button onClick={() => form.resetFields()}>取消</Button>
         </Form.Item>
       </Form>
     </Card>

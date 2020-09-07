@@ -30,16 +30,16 @@ export const getAllCourseList = () => {
 /* 
 获取指定课程下的章节分页列表
 */
-const getChapterListSync = ({courseId, pageSize, chapterList}) => ({ 
+const getChapterListSync = ({courseId, page, pageSize, chapterList}) => ({ 
   type: GET_CHAPTER_LIST, 
-  data: {courseId, pageSize, chapterList}
+  data: {courseId, page, pageSize, chapterList}
 }) 
 
 export const getChapterList = ({ page, pageSize, courseId }) => {
   return dispatch => {
     return reqChapterList({ page, pageSize, courseId })
       .then((chapterList) => {
-        dispatch(getChapterListSync({courseId, pageSize, chapterList}))
+        dispatch(getChapterListSync({courseId, page, pageSize, chapterList}))
         return chapterList
       })
   }
