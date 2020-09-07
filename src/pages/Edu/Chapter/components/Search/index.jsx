@@ -1,20 +1,32 @@
 /* 
 搜索的组件
 */
-import React from 'react'
+import React, {useEffect} from 'react'
 import {
   Card,
   Form,
   Select,
   Button
 } from 'antd'
+import {connect} from 'react-redux'
+
+import { getAllCourseList } from '../../redux'
 
 const {Option} = Select
 
 import './index.less'
 
-export default function Search (props) {
+function Search ({ // 解构props
+  allCourseList,
+  getAllCourseList
+}) {
   const [form] = Form.useForm()
+
+  // 初始请求获取所有课程列表
+  useEffect(() => {
+    getAllCourseList()
+  }, [])
+
 
   /* 
   表单校验成功后调用
@@ -36,8 +48,11 @@ export default function Search (props) {
           rules={[{ required: true, message: '请选择课程!' }]}
         >
           <Select placeholder="请输入" allowClear className="chapter-search-select">
-            <Option value="1">AAA</Option>
-            <Option value="2">BBB</Option>
+            {
+              allCourseList.map(c => (
+                <Option value={c._id} key={c._id}>{c.title}</Option>
+              ))
+            }
           </Select>
         </Form.Item>
         
@@ -55,3 +70,12 @@ export default function Search (props) {
     </Card>
   )
 }
+
+export default connect(
+  state => ({
+    allCourseList: state.chapter.allCourseList
+  }),  // 指定一般属性
+  {
+    getAllCourseList
+  }  // 指定函数属性, 直接放入action
+)(Search)

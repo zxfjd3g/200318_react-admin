@@ -7,6 +7,7 @@ import { user } from "@/components/Authorized/redux"
 import { userList } from "@/pages/Acl/User/redux"
 import { roleList } from "@/pages/Acl/Role/redux"
 import { menuList } from "@/pages/Acl/Permission/redux"
+import { chapter } from "@/pages/Edu/Chapter/redux"
 
 export default combineReducers({
   loading,
@@ -15,4 +16,5 @@ export default combineReducers({
   userList,
   roleList,
   menuList,
+  chapter
 })
