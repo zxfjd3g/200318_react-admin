@@ -1751,10 +1751,11 @@ function List ({
             <>
               <Button type="primary" icon={<PlusOutlined />} disabled></Button>
               <Tooltip placement="top" title='更新课时'>
-                <Button type="primary" icon={<EditOutlined />} className="btn-update"></Button>
+                <Button type="primary" icon={<EditOutlined />} className="btn-update" />
               </Tooltip>
               <Tooltip placement="top" title='删除课时'>
-                <Button type="danger" icon={<DeleteOutlined />} onClick={() => removeChapterOrLesson(record)}></Button>
+                <Button type="danger" icon={<DeleteOutlined />} 
+                    onClick={() => removeChapterOrLesson(record)}></Button>
               </Tooltip>
             </>
           )
@@ -1771,10 +1772,11 @@ function List ({
                 ></Button>
               </Tooltip>
               <Tooltip placement="top" title='更新章节'>
-                <Button type="primary" icon={<EditOutlined />} className="btn-update"></Button>
+                <Button type="primary" icon={<EditOutlined />} className="btn-update" />
               </Tooltip>
               <Tooltip placement="top" title='删除章节'>
-                <Button type="danger" icon={<DeleteOutlined />} onClick={() => removeChapterOrLesson(record)}></Button>
+                <Button type="danger" icon={<DeleteOutlined />} 
+                    onClick={() => removeChapterOrLesson(record)}></Button>
               </Tooltip>
             </>
           )
