@@ -20,11 +20,15 @@ import {
   ReloadOutlined,
   EditOutlined,
   DeleteOutlined,
+  ExclamationCircleOutlined,
+  EyeOutlined
 } from '@ant-design/icons' // 实现对内置图标的按需引入打包
+import Player from 'griffith'
 
 import {getChapterList, getLessonList} from '../../redux'
 import {DEFAULT_PAGE_SIZE} from '@/config/constants'
-import {reqAddChapter, reqUpdateChapter} from '@/api/edu/chapter'
+import {reqAddChapter, reqUpdateChapter, reqRemoveChapter} from '@/api/edu/chapter'
+import {reqRemoveLesson} from '@/api/edu/lesson'
 
 import './index.less'
 
@@ -45,6 +49,8 @@ function List ({
   const [expandedRowKeys, setExpandedRowKeys] = useState([])
   const [isShowAdd, setIsShowAdd] = useState(false)
   const [confirmLoading, setConfirmLoading] = useState(false)
+  const [isShowVideoModal, setIsShowVideoModal] = useState(false)
+  const [lesson, setLesson] = useState({})
   const [form] = Form.useForm()
   const chapterRef = useRef()
 
@@ -68,13 +74,24 @@ function List ({
     {
       title: '是否免费',
       dataIndex: 'free',
-      key: 'free'
+      key: 'free',
+      render: (free) => free===undefined ? '' : free ? '是' : '否'
     },
 
     {
       title: '视频',
       dataIndex: 'video',
-      key: 'video'
+      key: 'video',
+      render: (video, record) => {
+        return (
+          <Tooltip placement="top" title='预览视频'>
+            <Button icon={<EyeOutlined />} onClick={() => {
+              setLesson(record)
+              setIsShowVideoModal(true)
+            }}></Button>
+          </Tooltip>
+        )
+      }
     },
 
     {
@@ -89,7 +106,7 @@ function List ({
                 <Button type="primary" icon={<EditOutlined />} className="chapter-list-update"></Button>
               </Tooltip>
               <Tooltip placement="top" title='删除课时'>
-                <Button type="danger" icon={<DeleteOutlined />}></Button>
+                <Button type="danger" icon={<DeleteOutlined />} onClick={() => removeChapterOrLesson(record)}></Button>
               </Tooltip>
             </>
           ) 
@@ -120,7 +137,7 @@ function List ({
               />
             </Tooltip>
             <Tooltip placement="top" title='删除章节'>
-              <Button type="danger" icon={<DeleteOutlined />}></Button>
+              <Button type="danger" icon={<DeleteOutlined />} onClick={() => removeChapterOrLesson(record)}></Button>
             </Tooltip>
           </>
         )
@@ -208,6 +225,31 @@ function List ({
     }
   }
 
+  /* 
+  删除章节或课时
+  */
+  const removeChapterOrLesson = (record) => {
+    Modal.confirm({
+      title: <>确定要删除 {record.title} 吗?</>,
+      icon: <ExclamationCircleOutlined />,
+      content: '谨慎操作, 不可恢复!',
+      onOk: async () => {
+        if (record.video) {
+          await reqRemoveLesson(record._id)
+          message.success('删除课时成功!')
+          getLessonList(record.chapterId)
+        } else {
+          await reqRemoveChapter(record._id)
+          message.success('删除章节成功!')
+          getChapters(page>1 && items.length===1 ? page-1 : page)
+        }
+      },
+      onCancel() {
+        console.log('Cancel')
+      },
+    })
+  }
+
   return (
     <Card title="课程章节列表" extra={extra} className="chapter-list">
       <Table
@@ -279,6 +321,35 @@ function List ({
         </Form.Item>
       </Form>
     </Modal>
+
+    <Modal
+      visible={isShowVideoModal}
+      title={lesson.title}
+      centered
+      destroyOnClose
+      footer={null}
+      onCancel={() => {
+        setIsShowVideoModal(false)
+        setLesson({})
+      }}
+    >
+        <Player
+          id="video" 
+          title={lesson.title}
+          cover='/logo512.png'
+          duration={2}
+          sources={{
+            hd: {
+              bitrate: 2,
+              play_url: lesson.video||'',
+              duration: 1000,
+              format: 'mp4',
+              height: 100,
+              width: 100,
+              size: 100
+            }
+          }} />
+      </Modal>
 
     </Card>
   )
