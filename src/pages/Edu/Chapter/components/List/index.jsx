@@ -24,7 +24,7 @@ import {
 
 import {getChapterList, getLessonList} from '../../redux'
 import {DEFAULT_PAGE_SIZE} from '@/config/constants'
-import {reqAddChapter} from '@/api/edu/chapter'
+import {reqAddChapter, reqUpdateChapter} from '@/api/edu/chapter'
 
 import './index.less'
 
@@ -48,25 +48,15 @@ function List ({
   const [form] = Form.useForm()
   const chapterRef = useRef()
 
-  useEffect(() => { 
-    /* 
-    当第一次显示Modal时, 创建Modal组件对象, 它内部的组件Form对象是后面再异步创建
-    当Modal显示时我们想得到/操作form对象, 
-    */
-
+  /* useEffect(() => { 
     if (isShowAdd && chapterRef.current) {
-      // 第一次显示时会报错, 原因: Form组件对象还没有创建
-      // 解决: 在setTimeout中去操作form
-      /* form.setFieldsValue({
-        title: chapterRef.current.title
-      }) */
       setTimeout(() => {
-          form.setFieldsValue({
+        form.setFieldsValue({
           title: chapterRef.current.title
         })
-      });
+      })
     }
-  }, [isShowAdd])
+  }, [isShowAdd]) */
 
   const columns = [
     {
@@ -123,9 +113,9 @@ function List ({
                   setIsShowAdd(true)
                   // 指定初始显示表单内容
                   // 注意: 不能通过initialValues来指定
-                  // form.setFieldsValue({
-                  //   title: record.title
-                  // })
+                  form.setFieldsValue({
+                    title: record.title
+                  })
                 }}
               />
             </Tooltip>
@@ -185,9 +175,10 @@ function List ({
   /* 
   添加章节
   */
-  const addChapter = async () => {
+  const addOrUpdateChapter = async () => {
     // 表单校验
     const {title} = await form.validateFields()
+    const chapter = chapterRef.current
     // 校验成功, 发送添加章节的请求
     setConfirmLoading(true)
     try {
@@ -200,11 +191,18 @@ function List ({
             好处: 数据全部都是最新的
             不好: 请求需要一定的时间
         */
-      await reqAddChapter(courseId, title)
-      message.success('添加章节成功')
+      if (!chapter) {
+        await reqAddChapter(courseId, title)
+        message.success('添加章节成功')
+      } else {
+        await reqUpdateChapter(chapter._id, title)
+        message.success('更新章节成功')
+        chapterRef.current = null
+      }
+      
       form.resetFields()
       setIsShowAdd(false)
-      getChapters(1)
+      getChapters(chapter ? page : 1)
     } finally {
       setConfirmLoading(false)
     }
@@ -243,15 +241,16 @@ function List ({
       />
 
     <Modal
-      /* getContainer={false} */
+      getContainer={false}
       confirmLoading={confirmLoading}
       visible={isShowAdd}
       title={chapterRef.current ? '修改章节' : '添加章节'}
       onCancel={() => {
+        chapterRef.current = null
         form.resetFields()
         setIsShowAdd(false)
       }}
-      onOk={addChapter}
+      onOk={addOrUpdateChapter}
     >
       <Form
         form={form}

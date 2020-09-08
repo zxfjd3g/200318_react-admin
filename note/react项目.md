@@ -2559,3 +2559,54 @@ const onRemove = () => {
 
 ### 手机号登录
 
+
+
+## Modal与Form配合使用的问题(面试说)
+
+```jsx
+功能: 利用Modal + Form实现多条数据项的修改?
+ 问题1: 
+    描述: 表单项中总是显示第一次指定的数据项值
+    原因: initialValues来动态指定表单项的初始默认值, 但它只会显示第一次指定的值(Form一直在复用)
+    	initialValues={{ // 初始值只会显示第一次显示指定的值
+           title: chapter.title
+        }}
+    解决: 显示对话框时, 通过setFieldsValue()来指定表单项的初始值
+    	setIsShowAdd(true)
+        form.setFieldsValue({
+            title: record.title
+        })
+ 问题2: 
+    描述: 第一次显示对话框时,会报错: form没有传入到<Form>的props中, 但我们传了
+    原因: Modal和Form组件对象都还没有创建
+    
+ 不行的解决办法: 在Modal显示之后才执行
+     useEffect(() => { 
+        if (isShowAdd && chapterRef.current) {
+          form.setFieldsValue({ // form组件对象还没有创建
+            title: chapterRef.current.title
+          })
+        }
+      }, [isShowAdd])
+    
+   原因: Modal组件对象创建时, 不会立即创建内部的Form组件对象, 后面异步创建的Form (Modal创建了, 但Form组件对象没有创建)
+    
+可行的解决办法1: 利用定时器
+     useEffect(() => { 
+        if (isShowAdd && chapterRef.current) {
+          setTimeout(() => { // 此时Form组件已经创建了
+            form.setFieldsValue({
+              title: chapterRef.current.title
+            })
+          })
+        }
+      }, [isShowAdd])
+可行的解决办法2: 让Modal初始不显示时就创建出来(内部的form也会创建出来)
+    <Modal getContainer={false}>
+        
+ getContainer={false}的作用:
+    1) Modal的界面从默认的body中转移到当前所有标签中
+    2) 会立即创建Dodal组件其及内部的Form组件对象, 只是不显示而已
+    相当于预创建了, 而默认是第一次需要显示时才创建(懒创建)
+```
+
