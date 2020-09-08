@@ -6,7 +6,11 @@ import {
   Card,
   Table,
   Button,
-  Tooltip
+  Tooltip,
+  Modal,
+  Form,
+  Input,
+  message
 } from 'antd'
 import {connect} from 'react-redux'
 import {
@@ -19,6 +23,7 @@ import {
 
 import {getChapterList, getLessonList} from '../../redux'
 import {DEFAULT_PAGE_SIZE} from '@/config/constants'
+import {reqAddChapter} from '@/api/edu/chapter'
 
 import './index.less'
 
@@ -35,6 +40,9 @@ function List ({
   // const [page, setPage] = useState(1)  // 将page交给redux管理
   const [loading, setLoading] = useState(false)
   const [expandedRowKeys, setExpandedRowKeys] = useState([])
+  const [isShowAdd, setIsShowAdd] = useState(false)
+  const [confirmLoading, setConfirmLoading] = useState(false)
+  const [form] = Form.useForm()
 
   const columns = [
     {
@@ -80,7 +88,14 @@ function List ({
   // Card的右上角界面
   const extra = (
     <>
-      <Button type="primary" icon={<PlusOutlined/>}>新增章节</Button>
+      <Button 
+        type="primary" 
+        icon={<PlusOutlined/>} 
+        disabled={!courseId}
+        onClick={() => setIsShowAdd(true)}
+      >
+        新增章节
+      </Button>
       <Tooltip placement="top" title="全屏">
         <FullscreenOutlined className="chapter-list-full"/>
       </Tooltip>
@@ -111,6 +126,30 @@ function List ({
   */
   const onExpandedRowsChange = (expandedRowKeys) => {
     setExpandedRowKeys(expandedRowKeys)
+  }
+
+  /* 
+  添加章节
+  */
+  const addChapter = async () => {
+    // 表单校验
+    const {title} = await form.validateFields()
+    // 校验成功, 发送添加章节的请求
+
+    /* 
+    添加成功后, 更新前台界面
+      方式1: 直接在前台把数据更新一下
+        好处: 不用再发请求
+        不好: 其它所有数据都不是最新的
+      方式2: 再次发送获取列表请求  ===> 绝大部分都用这种
+        好处: 数据全部都是最新的
+        不好: 请求需要一定的时间
+    */
+    await reqAddChapter(courseId, title)
+    message.success('添加章节成功')
+    form.resetFields()
+    setIsShowAdd(false)
+    getChapters(1)
   }
 
   return (
@@ -144,6 +183,42 @@ function List ({
           onExpandedRowsChange, // 行展开变化时触发
         }}
       />
+
+    <Modal
+      confirmLoading={confirmLoading}
+      visible={isShowAdd}
+      title="添加章节"
+      onCancel={() => {
+        form.resetFields()
+        setIsShowAdd(false)
+      }}
+      onOk={addChapter}
+    >
+      <Form
+        form={form}
+        labelCol={{
+          span: 6,
+        }}
+        wrapperCol={{
+          span: 14,
+        }}
+        layout="horizontal"
+      >
+        <Form.Item
+          name="title"
+          label="章节名称"
+          rules={[
+            {
+              required: true,
+              message: '必须输入章节名称',
+            },
+          ]}
+        >
+          <Input placeholder="章节名称"/>
+        </Form.Item>
+      </Form>
+    </Modal>
+
     </Card>
   )
 }

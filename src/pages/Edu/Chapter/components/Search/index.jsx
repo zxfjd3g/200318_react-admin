@@ -92,3 +92,8 @@ export default connect(
     getChapterList
   }  // 指定函数属性, 直接放入action
 )(Search)
+
+
+// 高阶组件用来封装可复用的功能
+  // connect: 向指定UI组件传入指定的属性
+  // withRouter: 向非路由组件传入history/match/location属性

@@ -22,7 +22,7 @@ import {
 */
 const getAllCourseListSync = (allCourseList) => ({type: GET_ALL_COURSE_LIST, data: allCourseList})
 export const getAllCourseList = () => {
-  return async dispatch => {
+  return async (dispatch, getState) => {
     // 执行异步请求
     const allCourseList = await reqAllCourseList()
     // 请求成功后, 分发同步action
