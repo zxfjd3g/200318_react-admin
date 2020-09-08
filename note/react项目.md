@@ -1161,7 +1161,7 @@ export default function Subject (props) {
 - 删除章节
 - 删除课时
 - 修改章节
-- 添加课时
+- 修改课时
 
 ### 定义相关接口请求函数
 
