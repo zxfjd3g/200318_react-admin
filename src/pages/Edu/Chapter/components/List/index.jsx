@@ -49,10 +49,6 @@ function List ({
   const chapterRef = useRef()
 
   useEffect(() => { 
-    // 解决bug: 提示没有将form传递给<Form>
-    // 原因: 第一次使用form不能在form界面显示之前(Form组件对象还没有创建), 必须在显示界面之后
-    // 当前已经显示修改章节的form了
-
     /* 
     当第一次显示Modal时, 创建Modal组件对象, 它内部的组件Form对象是后面再异步创建
     当Modal显示时我们想得到/操作form对象, 
