@@ -20,6 +20,7 @@ import './index.less'
 function Search ({ // 解构props
   allCourseList,
   pageSize,
+  courseId,
 
   getAllCourseList,
   getChapterList
@@ -52,6 +53,9 @@ function Search ({ // 解构props
         form={form} 
         layout="inline" 
         onFinish={onFinish}
+        initialValues={{
+          courseId: courseId ? courseId : undefined
+        }}
       >
         <Form.Item
           label="选择课程"
@@ -86,6 +90,7 @@ export default connect(
   state => ({
     allCourseList: state.chapter.allCourseList,
     pageSize: state.chapter.pageSize,
+    courseId: state.chapter.courseId
   }),  // 指定一般属性
   {
     getAllCourseList,

@@ -1,7 +1,7 @@
 /* 
 搜索的组件
 */
-import React, {useState} from 'react'
+import React, {useState, useRef} from 'react'
 import {
   Card,
   Table,
@@ -46,6 +46,7 @@ function List ({
   const [isShowAdd, setIsShowAdd] = useState(false)
   const [confirmLoading, setConfirmLoading] = useState(false)
   const [form] = Form.useForm()
+  const chapterRef = useRef()
 
   const columns = [
     {
@@ -93,7 +94,20 @@ function List ({
                 onClick={() => history.push('/edu/chapter/addlesson', record)}></Button>
             </Tooltip>
             <Tooltip placement="top" title='修改章节'>
-              <Button type="primary" icon={<EditOutlined />} className="chapter-list-update"></Button>
+              <Button 
+                type="primary" 
+                icon={<EditOutlined />} 
+                className="chapter-list-update"
+                onClick={() => {
+                  chapterRef.current = {...record}
+                  setIsShowAdd(true)
+                  // 指定初始显示表单内容
+                  // 注意: 不能通过initialValues来指定
+                  form.setFieldsValue({
+                    title: record.title
+                  })
+                }}
+              />
             </Tooltip>
             <Tooltip placement="top" title='删除章节'>
               <Button type="danger" icon={<DeleteOutlined />}></Button>
@@ -155,21 +169,25 @@ function List ({
     // 表单校验
     const {title} = await form.validateFields()
     // 校验成功, 发送添加章节的请求
-
-    /* 
-    添加成功后, 更新前台界面
-      方式1: 直接在前台把数据更新一下
-        好处: 不用再发请求
-        不好: 其它所有数据都不是最新的
-      方式2: 再次发送获取列表请求  ===> 绝大部分都用这种
-        好处: 数据全部都是最新的
-        不好: 请求需要一定的时间
-    */
-    await reqAddChapter(courseId, title)
-    message.success('添加章节成功')
-    form.resetFields()
-    setIsShowAdd(false)
-    getChapters(1)
+    setConfirmLoading(true)
+    try {
+       /* 
+        添加成功后, 更新前台界面
+          方式1: 直接在前台把数据更新一下
+            好处: 不用再发请求
+            不好: 其它所有数据都不是最新的
+          方式2: 再次发送获取列表请求  ===> 绝大部分都用这种
+            好处: 数据全部都是最新的
+            不好: 请求需要一定的时间
+        */
+      await reqAddChapter(courseId, title)
+      message.success('添加章节成功')
+      form.resetFields()
+      setIsShowAdd(false)
+      getChapters(1)
+    } finally {
+      setConfirmLoading(false)
+    }
   }
 
   return (
@@ -205,9 +223,10 @@ function List ({
       />
 
     <Modal
+      getContainer={false}
       confirmLoading={confirmLoading}
       visible={isShowAdd}
-      title="添加章节"
+      title={chapterRef.current ? '修改章节' : '添加章节'}
       onCancel={() => {
         form.resetFields()
         setIsShowAdd(false)
@@ -223,7 +242,11 @@ function List ({
           span: 14,
         }}
         layout="horizontal"
+        // initialValues={{ // 初始值只会显示第一次显示指定的值
+        //   title: chapterRef.current && chapterRef.current.title
+        // }}
       >
+        <Form.Item>{chapterRef.current && chapterRef.current.title}</Form.Item>
         <Form.Item
           name="title"
           label="章节名称"

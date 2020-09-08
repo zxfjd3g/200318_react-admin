@@ -5,8 +5,11 @@ import {
   Form,
   Input,
   Switch,
-  Button
+  Button,
+  message
 } from 'antd'
+
+import {reqAddLesson} from '@/api/edu/lesson'
 
 import Upload from '@/components/Upload'
 
@@ -20,13 +23,16 @@ export default function AddLesson({
   const chapter = location.state
 
 
-  const onFinish = (values) => {
-
+  const onFinish = async (values) => {
+    await reqAddLesson({ ...values, chapterId: chapter._id })
+    message.success('添加课时成功')
+    form.resetFields()
+    history.replace('/edu/chapter/list')
   }
 
   const title = (
     <PageHeader 
-      onBack={() => history.replace('/edut/chapter/list')}
+      onBack={() => history.replace('/edu/chapter/list')}
       title="添加课时"
     />
   )
