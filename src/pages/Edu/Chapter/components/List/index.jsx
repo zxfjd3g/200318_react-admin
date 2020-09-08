@@ -13,6 +13,7 @@ import {
   message
 } from 'antd'
 import {connect} from 'react-redux'
+import {withRouter} from 'react-router-dom'
 import {
   PlusOutlined,
   FullscreenOutlined,
@@ -28,6 +29,8 @@ import {reqAddChapter} from '@/api/edu/chapter'
 import './index.less'
 
 function List ({
+  history,
+
   page,
   pageSize,
   chapterList: {total, items},
@@ -67,15 +70,32 @@ function List ({
       title: '操作',
       key: 'action',
       render: (record) => {
+        if (record.video) {
+          return (
+            <>
+              <Button type="primary" icon={<PlusOutlined />} disabled></Button>
+              <Tooltip placement="top" title='修改课时'>
+                <Button type="primary" icon={<EditOutlined />} className="chapter-list-update"></Button>
+              </Tooltip>
+              <Tooltip placement="top" title='删除课时'>
+                <Button type="danger" icon={<DeleteOutlined />}></Button>
+              </Tooltip>
+            </>
+          ) 
+        }
+
         return (
           <>
             <Tooltip placement="top" title='新增课时'>
-              <Button type="primary" icon={<PlusOutlined />}></Button>
+              <Button 
+                type="primary" 
+                icon={<PlusOutlined />} 
+                onClick={() => history.push('/edu/chapter/addlesson', record)}></Button>
             </Tooltip>
-            <Tooltip placement="top" title='修改课时'>
+            <Tooltip placement="top" title='修改章节'>
               <Button type="primary" icon={<EditOutlined />} className="chapter-list-update"></Button>
             </Tooltip>
-            <Tooltip placement="top" title='删除课时'>
+            <Tooltip placement="top" title='删除章节'>
               <Button type="danger" icon={<DeleteOutlined />}></Button>
             </Tooltip>
           </>
@@ -223,7 +243,7 @@ function List ({
   )
 }
 
-export default connect(
+export default withRouter(connect(
   state => ({
     page: state.chapter.page,
     pageSize: state.chapter.pageSize,
@@ -234,4 +254,10 @@ export default connect(
     getChapterList,
     getLessonList
   }
-)(List)
+)(List)) // 容器组件会将接收的路由相关属性透传给UI组件
+
+/* 
+withRouter(connect(...)(MyComponent))
+// This does not
+connect(...)(withRouter(MyComponent))
+*/
