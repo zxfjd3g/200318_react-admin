@@ -1,7 +1,7 @@
 /* 
 搜索的组件
 */
-import React, {useState, useRef} from 'react'
+import React, {useState, useRef, useEffect} from 'react'
 import {
   Card,
   Table,
@@ -47,6 +47,30 @@ function List ({
   const [confirmLoading, setConfirmLoading] = useState(false)
   const [form] = Form.useForm()
   const chapterRef = useRef()
+
+  useEffect(() => { 
+    // 解决bug: 提示没有将form传递给<Form>
+    // 原因: 第一次使用form不能在form界面显示之前(Form组件对象还没有创建), 必须在显示界面之后
+    // 当前已经显示修改章节的form了
+
+    /* 
+    当第一次显示Modal时, 创建Modal组件对象, 它内部的组件Form对象是后面再异步创建
+    当Modal显示时我们想得到/操作form对象, 
+    */
+
+    if (isShowAdd && chapterRef.current) {
+      // 第一次显示时会报错, 原因: Form组件对象还没有创建
+      // 解决: 在setTimeout中去操作form
+      /* form.setFieldsValue({
+        title: chapterRef.current.title
+      }) */
+      setTimeout(() => {
+          form.setFieldsValue({
+          title: chapterRef.current.title
+        })
+      });
+    }
+  }, [isShowAdd])
 
   const columns = [
     {
@@ -103,9 +127,9 @@ function List ({
                   setIsShowAdd(true)
                   // 指定初始显示表单内容
                   // 注意: 不能通过initialValues来指定
-                  form.setFieldsValue({
-                    title: record.title
-                  })
+                  // form.setFieldsValue({
+                  //   title: record.title
+                  // })
                 }}
               />
             </Tooltip>
@@ -223,7 +247,7 @@ function List ({
       />
 
     <Modal
-      getContainer={false}
+      /* getContainer={false} */
       confirmLoading={confirmLoading}
       visible={isShowAdd}
       title={chapterRef.current ? '修改章节' : '添加章节'}
@@ -246,7 +270,6 @@ function List ({
         //   title: chapterRef.current && chapterRef.current.title
         // }}
       >
-        <Form.Item>{chapterRef.current && chapterRef.current.title}</Form.Item>
         <Form.Item
           name="title"
           label="章节名称"
