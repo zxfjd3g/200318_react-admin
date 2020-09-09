@@ -2052,84 +2052,6 @@ export default function AddLesson({
 
 
 
-
-### 全屏功能
-
-- 下载
-
-```
-yarn add screenfull
-```
-
-- 标识需要进行全屏的div
-
-```jsx
-export default function Chapter () {
-
-  const fullscreenRef = useRef()
-
-  return (
-    <div ref={fullscreenRef}>
-      <Search/>
-      <List fullscreenRef={this.fullscreenRef}/>
-    </div>
-  )
-}
-```
-
-- 切换全屏
-
-```jsx
-import screenfull from 'screenfull'
-
-const [isScreenFull, setIsScreenFull] = useState(false)
-
-useEffect(() => {
-    // 绑定改变的监听
-    screenfull.onchange(() => {
-        // 保存当前是否全屏状态
-        setIsScreenFull(screenfull.isFullscreen)
-    })
-}, [])
-
-/* 
-点击切换全屏
-*/
-const toggleFullScreen = () => {
-  const dom = fullscreenRef.current
-  screenfull.toggle(dom) // 切换全屏
-}
-
-<Tooltip title="全屏">
-    {
-        isScreenFull
-        ? <FullscreenExitOutlined onClick={toggleFullScreen} />
-        : <FullscreenOutlined onClick={toggleFullScreen} />
-	}
-</Tooltip>
-```
-
-- **解决全屏bug1: 底部有黑色部分**
-  - 原因: 列表的高度不够
-
-```css
-.chapter-list {
-  min-height: 100%;
-}
-```
-
-- **解决bug2: 全屏时下拉列表不显示**
-  - 原因: 默认下拉列表是动态插入body中显示的, 全屏时只显示当前路由组件界面
-  - 解决: 指定插入在表单内显示
-
-```jsx
-<Select 
-	getPopupContainer={triggerNode => triggerNode.parentNode}
->
-```
-
-
-
 ### 视频上传七牛云
 
 #### 封装视频上传组件
@@ -2517,47 +2439,80 @@ const onRemove = () => {
 
 
 
+### 全屏功能
 
+- 下载
 
-## 课程管理
+```
+yarn add screenfull
+```
 
-### 顶部搜索的功能
+- 标识需要进行全屏的div
 
+```jsx
+export default function Chapter () {
 
+  const fullscreenRef = useRef()
 
-### 点击查询按钮,获取课程数据
+  return (
+    <div ref={fullscreenRef}>
+      <Search/>
+      <List fullscreenRef={this.fullscreenRef}/>
+    </div>
+  )
+}
+```
 
+- 切换全屏
 
+```jsx
+import screenfull from 'screenfull'
 
-### 动态渲染课程列表
+const [isScreenFull, setIsScreenFull] = useState(false)
 
+useEffect(() => {
+    // 绑定改变的监听
+    screenfull.onchange(() => {
+        // 保存当前是否全屏状态
+        setIsScreenFull(screenfull.isFullscreen)
+    })
+}, [])
 
+/* 
+点击切换全屏
+*/
+const toggleFullScreen = () => {
+  const dom = fullscreenRef.current
+  screenfull.toggle(dom) // 切换全屏
+}
 
-## 国际化 
+<Tooltip title="全屏">
+    {
+        isScreenFull
+        ? <FullscreenExitOutlined onClick={toggleFullScreen} />
+        : <FullscreenOutlined onClick={toggleFullScreen} />
+	}
+</Tooltip>
+```
 
-### react-intl -->国际化我们定义的数据
+- **解决全屏bug1: 底部有黑色部分**
+  - 原因: 列表的高度不够
 
+```css
+.chapter-list {
+  min-height: 100%;
+}
+```
 
+- **解决bug2: 全屏时下拉列表不显示**
+  - 原因: 默认下拉列表是动态插入body中显示的, 全屏时只显示当前路由组件界面
+  - 解决: 指定插入在表单内显示
 
-### 给头部的国际化按钮添加功能
-
-
-
-### 国际化antd中定义的数据
-
-
-
-## 用户登陆
-
-### 实现表单校验-利用antd表单校验
-
-
-
-### 账户名和密码登录
-
-
-
-### 手机号登录
+```jsx
+<Select 
+	getPopupContainer={triggerNode => triggerNode.parentNode}
+>
+```
 
 
 
