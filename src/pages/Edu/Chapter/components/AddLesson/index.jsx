@@ -88,6 +88,7 @@ export default function AddLesson({
             {required: true, message: '必须上传视图'}
           ]}
         >
+          {/* Item会给内部组件传入一个onChange函数, 用来指定新的数据值 */}
           <Upload/>
         </Form.Item>
 

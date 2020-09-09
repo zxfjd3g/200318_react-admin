@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react'
+import React, {useState, useEffect, useRef} from 'react'
 
 import {
   Upload as AntdUpload,
@@ -19,13 +19,15 @@ export default function Upload (props) {
 
   const [uploadToken, setUploadToken] = useState('')
   const [expires, setExpires] = useState(0)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const subRef = useRef()
 
   // 初始时获取token
   useEffect(() => {
     getUploadToken()
 
     return () => { // 在组件死亡前调用
-      // subscription.unsubscribe() // 上传取消
+      subRef.current && subRef.current.unsubscribe() // 上传取消
     }
   }, [])
 
@@ -147,13 +149,34 @@ export default function Upload (props) {
         // 通知Upload成功了
         onSuccess(res)
         message.success('上传成功了')
+        setIsSuccess(true)
+
+        // 生成一个视频文件url
+        const url = 'http://qfvduovyk.hn-bkt.clouddn.com/' + res.key
+        // 交给外部Item管理的video
+        props.onChange(url)  // onChange是Item传入的更新数据的函数
       }
     }
 
     // 3. 上传开始
     const subscription = observable.subscribe(observer)
-
+    // 保存到ref容器
+    subRef.current = subscription
     
+  }
+
+  /* 
+  点击删除时触发
+  */
+  const onRemove = () => {
+    // 发送删除图片 (七牛没有提供对应的接口)
+
+    // 标识未上传
+    setIsSuccess(false)
+    // 重置外部的video
+    props.onChange('')
+    // 上传取消
+    subRef.current && subRef.current.unsubscribe() 
   }
 
   return (
@@ -162,8 +185,11 @@ export default function Upload (props) {
       listType="picture"
       beforeUpload={beforeUpload}
       customRequest={customRequest}
+      onRemove={onRemove}
     >
-      <Button icon={<UploadOutlined />}>上传视频</Button>
+      {
+        !isSuccess && <Button icon={<UploadOutlined />}>上传视频</Button>
+      }
     </AntdUpload>
   )
 }
