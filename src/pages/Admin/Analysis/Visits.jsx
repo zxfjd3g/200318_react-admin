@@ -8,7 +8,7 @@ class Visits extends Component {
   };
 
   componentDidMount() {
-    setTimeout(() => {
+    this.timeoutId = setTimeout(() => {
       const visits = [];
       let year = 1986;
 
@@ -23,6 +23,10 @@ class Visits extends Component {
         visits
       });
     }, 1000);
+  }
+
+  componentWillUnmount () {
+    clearTimeout(this.timeoutId)
   }
 
   render() {

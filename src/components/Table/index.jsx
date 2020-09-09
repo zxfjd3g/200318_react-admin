@@ -23,12 +23,16 @@ import "./index.less"
 
 const CheckboxGroup = Checkbox.Group
 
+/* 
+封装可复用的表格
+*/
 class Table extends Component {
   static propTypes = {
     container: PropTypes.any,
     title: PropTypes.string,
     extra: PropTypes.array,
     selectedRowKeys: PropTypes.array,
+    
     onSelectChange: PropTypes.func,
     onRefresh: PropTypes.func,
   }

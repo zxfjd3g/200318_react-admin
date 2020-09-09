@@ -23,11 +23,7 @@ const layoutCol = {
 function SearchForm({ search }) {
   const [form] = Form.useForm()
 
-  const resetForm = () => {
-    form.resetFields()
-  }
-
-  const searchUserList = (values) => {
+  const onFinish = (values) => {
     const { name, level, time } = values
     const gmtCreateBegin = time ? time[0].toISOString() : ''
     const gmtCreateEnd = time ? time[1].toISOString() : ''
@@ -36,7 +32,7 @@ function SearchForm({ search }) {
 
   return (
     <div className="search-form">
-      <Form layout="inline" form={form} onFinish={searchUserList}>
+      <Form layout="inline" form={form} onFinish={onFinish}>
         <Row gutter={[10, 20]} className="search-form-row">
           <Col {...layoutCol}>
             <Form.Item name="name" label="讲师名称">
@@ -63,7 +59,7 @@ function SearchForm({ search }) {
                 <Button type="primary" htmlType="submit">
                   查询
                 </Button>
-                <Button onClick={resetForm} className="search-form-btn">
+                <Button onClick={() => form.resetFields()} className="search-form-btn">
                   重置
                 </Button>
               </div>

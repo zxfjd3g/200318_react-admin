@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { Form, Tabs, Input, Button, Checkbox, Row, Col, message } from "antd"
 import {
   UserOutlined,
@@ -65,6 +65,18 @@ function LoginForm({ login, mobileLogin, history }) {
   const [isSendCode, setIsSendCode] = useState(false)
 
   const [activeKey, setActiveKey] = useState("user")
+  const timerRef = useRef()
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        console.log('--------')
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [])
+
+
 
   // 处理tab点击的事件回调
   const handleTabChange = (key) => {
@@ -168,7 +180,7 @@ function LoginForm({ login, mobileLogin, history }) {
       countingDownTime--
       if (countingDownTime <= 0) {
         // 清除定时器
-        clearInterval(timer)
+        clearInterval(timerRef.current)
         countingDownTime = TOTAL_TIME
         setIsSendCode(false)
         return
@@ -176,6 +188,8 @@ function LoginForm({ login, mobileLogin, history }) {
       // setCountingDownTime目的为了重新渲染组件，数据更新不更新无所谓
       setCountingDownTime(countingDownTime)
     }, 1000)
+    // 保存起来
+    timerRef.current = timer
   }
 
   // 点击发送验证码

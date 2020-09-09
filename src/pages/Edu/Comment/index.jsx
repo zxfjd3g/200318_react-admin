@@ -19,7 +19,6 @@ import dayjs from "dayjs"
 
 import relativeTime from "dayjs/plugin/relativeTime"
 
-import { connect } from "react-redux"
 import SearchForm from "./SearchForm"
 
 import "./index.less"
@@ -50,17 +49,9 @@ const data = [
     ),
   },
 ]
-
-@connect(
-  (state) => ({
-    // courseList: state.courseList
-    // permissionValueList: filterPermissions(
-    //   state.course.permissionValueList,
-    //   "Course"
-    // )
-  })
-  // { getcourseList }
-)
+/* 
+评论管理
+*/
 class Comment extends Component {
   state = {
     searchLoading: false,
@@ -76,43 +67,6 @@ class Comment extends Component {
         previewImage: img,
       })
     }
-  }
-
-  handleImgModal = () => {
-    this.setState({
-      previewVisible: false,
-    })
-  }
-
-  componentDidMount() {
-    // const { page, limit } = this.state
-    // this.handleTableChange(page, limit)
-  }
-
-  handleTableChange = (page, limit) => {
-    this.setState({
-      tableLoading: true,
-    })
-
-    this.getcourseList({ page, limit }).finally(() => {
-      this.setState({
-        tableLoading: false,
-        page,
-        limit,
-      })
-    })
-  }
-
-  getcourseList = ({ page, limit, Coursename, nickName }) => {
-    return this.props
-      .getcourseList({ page, limit, Coursename, nickName })
-      .then((total) => {
-        if (total === 0) {
-          message.warning("暂无用户列表数据")
-          return
-        }
-        message.success("获取用户列表数据成功")
-      })
   }
 
   onChange = (checkedValues) => {
@@ -194,7 +148,11 @@ class Comment extends Component {
         <Modal
           visible={previewVisible}
           footer={null}
-          onCancel={this.handleImgModal}
+          onCancel={() => {
+            this.setState({
+              previewVisible: false,
+            })
+          }}
         >
           <img alt="example" style={{ width: "100%" }} src={previewImage} />
         </Modal>

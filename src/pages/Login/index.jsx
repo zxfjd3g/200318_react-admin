@@ -16,12 +16,6 @@ export default class Login extends Component {
           <div className="login-content">
             <LoginForm />
           </div>
-          {/* <div className="login-footer">
-            <span>尚硅谷</span>
-            <span>
-              Copyright <CopyrightOutlined /> 2020尚硅谷前端技术部出品
-            </span>
-          </div> */}
         </div>
       </div>
     )

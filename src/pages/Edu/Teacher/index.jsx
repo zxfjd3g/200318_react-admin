@@ -11,7 +11,9 @@ import Table from "@/components/Table"
 import SearchForm from "./components/SearchForm"
 import { reqTeacherList } from "@/api/edu/teacher"
 
-
+/* 
+讲师管理
+*/
 class Teacher extends Component {
   
   state = {
@@ -29,6 +31,9 @@ class Teacher extends Component {
 
   containerRef = createRef()
 
+  /* 
+  显示图片
+  */
   showImgModal = (img) => {
     return () => {
       this.setState({
@@ -38,12 +43,7 @@ class Teacher extends Component {
     }
   }
 
-  handleImgModal = () => {
-    this.setState({
-      previewVisible: false,
-    })
-  }
-
+  // Table的列
   columns = [
     {
       title: "序号",
@@ -122,10 +122,14 @@ class Teacher extends Component {
     },
   ]
 
+  // 初始获取讲师分页列表
   componentDidMount() {
     this.getTeachList()
   }
 
+  /* 
+  获取讲师分页列表
+  */
   getTeachList = (page=this.state.page, limit = this.state.limit) => {
     
     this.setState({
@@ -177,18 +181,25 @@ class Teacher extends Component {
     })
   }
 
+  /* 
+  交给search子组件调用的搜索函数
+  */
   search =  (searchValues) => {
     this.searchValues = searchValues
     this.getTeachList(1)
   }
 
+  /* 
+  刷新重新获取当前页数据列表显示
+  */
   refresh = () => {
     const { page, limit } = this.state
-    this.handleTableChange({ page, limit }).then(() => {
-      message.success("刷新数据成功！")
-    })
+    this.getTeachList(page, limit)
   }
 
+  /* 
+  选中发生改变时触发
+  */
   onSelectChange = (selectedRowKeys) => {
     this.setState({
       selectedRowKeys,
@@ -223,14 +234,15 @@ class Teacher extends Component {
           search={this.search}
         />
         <Table
+          loading={tableLoading}
           title="讲师数据列表"
+          dataSource={teacherList}
+          columns={this.columns}
+          rowKey="_id"
           scroll={{ x: 1400}}
           container={this.containerRef}
           onRefresh={this.refresh}
           extra={extra}
-          columns={this.columns}
-          dataSource={teacherList}
-          rowKey="_id"
           selectedRowKeys={selectedRowKeys}
           onSelectChange={this.onSelectChange}
           pagination={{
@@ -243,12 +255,17 @@ class Teacher extends Component {
             onChange: this.getTeachList,
             onShowSizeChange: (page, pageSize) => this.getTeachList(1, pageSize),
           }}
-          loading={tableLoading}
+          
         />
+        
         <Modal
           visible={previewVisible}
           footer={null}
-          onCancel={this.handleImgModal}
+          onCancel={() => {
+            this.setState({
+              previewVisible: false,
+            })
+          }}
         >
           <img alt="example" style={{ width: "100%" }} src={previewImage} />
         </Modal>

@@ -1,8 +1,6 @@
 import React from "react"
 import { Form, Select, Button } from "antd"
 
-import "./index.less"
-
 const { Option } = Select
 
 function SearchForm() {
@@ -20,9 +18,9 @@ function SearchForm() {
           placeholder="课程"
           style={{ width: 250, marginRight: 20 }}
         >
-          <Option value="1">1</Option>
-          <Option value="2">2</Option>
-          <Option value="3">3</Option>
+          <Option value="1">A</Option>
+          <Option value="2">B</Option>
+          <Option value="3">C</Option>
         </Select>
       </Form.Item>
       <Form.Item>
