@@ -32,8 +32,9 @@ const CancelToken = axios.CancelToken
 const cancelTokenMap = new Map()
 const CANCEL_REQUEST_MESSAGE = "cancel request"
 
+const baseURL = process.env.NODE_ENV==='production' ? '/edu-api' : ''
 const axiosInstance = axios.create({
-  baseURL: "", // 基础路径：所有请求的公共路径
+  baseURL, // 基础路径：所有请求的公共路径
   timeout: 10000, // 如果请求超过10s都没有响应结果，就自动中断请求
   headers: {
     // 公共的请求头参数
