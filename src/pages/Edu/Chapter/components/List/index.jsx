@@ -17,6 +17,7 @@ import {withRouter} from 'react-router-dom'
 import {
   PlusOutlined,
   FullscreenOutlined,
+  FullscreenExitOutlined,
   ReloadOutlined,
   EditOutlined,
   DeleteOutlined,
@@ -24,6 +25,7 @@ import {
   EyeOutlined
 } from '@ant-design/icons' // 实现对内置图标的按需引入打包
 import Player from 'griffith'
+import screenfull from 'screenfull'
 
 import {getChapterList, getLessonList} from '../../redux'
 import {DEFAULT_PAGE_SIZE} from '@/config/constants'
@@ -33,8 +35,8 @@ import {reqRemoveLesson} from '@/api/edu/lesson'
 import './index.less'
 
 function List ({
+  containerRef,
   history,
-
   page,
   pageSize,
   chapterList: {total, items},
@@ -51,6 +53,7 @@ function List ({
   const [confirmLoading, setConfirmLoading] = useState(false)
   const [isShowVideoModal, setIsShowVideoModal] = useState(false)
   const [lesson, setLesson] = useState({})
+  const [isFullScreen, setIsFullScreen] = useState(false)
   const [form] = Form.useForm()
   const chapterRef = useRef()
 
@@ -63,6 +66,18 @@ function List ({
       })
     }
   }, [isShowAdd]) */
+
+  useEffect(() => {
+    // 绑定全屏改变的监听
+    screenfull.onchange(() => {
+      console.log('---', screenfull.isFullscreen)
+      // 保存当前全屏的状态
+      setIsFullScreen(screenfull.isFullscreen)
+    })
+    return () => {
+      screenfull.off('change')
+    }
+  }, [])
 
   const columns = [
     {
@@ -146,6 +161,15 @@ function List ({
 
   ]
 
+  /* 
+  点击进行全屏切换
+  */
+  function clickScreen () {
+    // 得到全局的dom元素
+    const container = containerRef.current
+    screenfull.toggle(container)
+  }
+
   // Card的右上角界面
   const extra = (
     <>
@@ -158,7 +182,11 @@ function List ({
         新增章节
       </Button>
       <Tooltip placement="top" title="全屏">
-        <FullscreenOutlined className="chapter-list-full"/>
+        {
+          isFullScreen ? <FullscreenExitOutlined className="chapter-list-full" onClick={clickScreen}/>
+          : <FullscreenOutlined className="chapter-list-full" onClick={clickScreen}/>
+        }
+        
       </Tooltip>
       <Tooltip placement="top" title="刷新">
         <ReloadOutlined/>

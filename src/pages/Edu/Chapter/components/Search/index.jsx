@@ -62,7 +62,8 @@ function Search ({ // 解构props
           name="courseId"
           rules={[{ required: true, message: '请选择课程!' }]}
         >
-          <Select placeholder="请输入" allowClear className="chapter-search-select">
+          <Select placeholder="请输入" allowClear className="chapter-search-select"
+            getPopupContainer={triggerNode => triggerNode.parentNode}>
             {
               allCourseList.map(c => (
                 <Option value={c._id} key={c._id}>{c.title}</Option>

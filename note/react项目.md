@@ -2439,6 +2439,26 @@ const onRemove = () => {
 
 
 
+使用七牛
+
+​	注册 & 登陆
+
+​	上传身份证
+
+​     创建一个存储对象: xxx
+
+​	查看当前账号: AK / SK
+
+​	在后台项目的配置中修改: 存储对象名 / SK / SK
+
+​	const ACCESS_KEY = "E7nFXkXGiqs5RxkOPFOGprfPN2SyyNDkwyk4CdLn";
+
+​	const SECRET_KEY = "aFgqIUxJhkDrWyDaqxfOF9a67hEQi0GmqVzlJ8QC";
+
+​	const BUCKET = "atguigu-200317"; // 对象存储的标识名称
+
+
+
 ### 全屏功能
 
 - 下载
@@ -2563,5 +2583,17 @@ const toggleFullScreen = () => {
     1) Modal的界面从默认的body中转移到当前所有标签中
     2) 会立即创建Dodal组件其及内部的Form组件对象, 只是不显示而已
     相当于预创建了, 而默认是第一次需要显示时才创建(懒创建)
+```
+
+
+
+## 其它功能
+
+```
+1. 课程管理
+2. 讲师管理
+3. 权限相关管理
+4. 登陆
+5. 可视化图表
 ```
 
