@@ -79,7 +79,10 @@ function Search ({ // 解构props
             >
               搜索
             </Button>
-            <Button onClick={() => form.resetFields()}>取消</Button>
+            <Button onClick={() => {
+              form.setFieldsValue({courseId: undefined})
+              // form.resetFields()
+            }}>取消</Button>
         </Form.Item>
       </Form>
     </Card>

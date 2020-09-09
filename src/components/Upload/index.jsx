@@ -1,160 +1,159 @@
-import React, { useState, useEffect, useRef } from "react"
+import React, {useState, useEffect} from 'react'
+
 import {
-  Button,
   Upload as AntdUpload,
-  message,
-} from "antd"
+  Button,
+  message
+} from 'antd'
+
 import { UploadOutlined } from "@ant-design/icons"
-import * as qiniu from "qiniu-js" // 七牛上传SDK
-import { nanoid } from "nanoid" // 用来生成唯一id
+
+import * as qiniu from 'qiniu-js'
+import { nanoid } from 'nanoid' // 用于生成随机唯一值
 
 import { reqUploadToken } from "@/api/edu/upload"
 
-import qiniuConfig from "@/config/qiniu"
-
-const MAX_VIDEO_SIZE = 35 * 1024 * 1024 // 35mb
+const MAX_VIDEO_SIZE = 1024 * 1024 * 2.5 // 视频的最大大小 2.5M
 
 export default function Upload (props) {
 
   const [uploadToken, setUploadToken] = useState('')
   const [expires, setExpires] = useState(0)
-  const [isUploadSuccess, setIsUploadSuccess] = useState(false)
-  const subRef = useRef(null)
 
-  // 初始获取上传需要的token
+  // 初始时获取token
   useEffect(() => {
     getUploadToken()
 
-    return () => {
-      subRef.current && subRef.current.unsubscribe()
+    return () => { // 在组件死亡前调用
+      // subscription.unsubscribe() // 上传取消
     }
   }, [])
 
   /* 
-  获取上传需要的token
+  获取用于上传图片token
+    内存缓存: state
+    硬盘缓存: localeStorage
+    服务器端: 必须发请求
+
+    有了后, 需要检查是否已过期
   */
   const getUploadToken = async () => {
     let token = uploadToken
     let exp = expires
-    if (!exp) {
-      // 从本地读取数据，并解析成对象
-       const data = JSON.parse(localStorage.getItem("upload_token")) || {}
-       // 取出其中的token值和失效时间
-       token = data.uploadToken
-       exp = data.expires
+
+    // 内存缓存: state 没有
+    if (!token) {
+      // 从localeStorage中读取
+      const data = JSON.parse(localStorage.getItem('upload-token'))  // {uploadToken, expires} / null
+      if (data) {
+        // 取出数据
+        token = data.uploadToken
+        exp = data.expires
+      }
+    }
+
+    if (exp > 0 && exp < Date.now()) { // 有且没有过期
+      if (uploadToken==='') { // 当state中没有时, 保存到state中
+        setUploadToken(token)
+        setExpires(exp)
+        return
+      }
+    }
+
+    // 如果有, 必然过期了, 清除数据
+    if (token) {
+      setUploadToken('')
+      setExpires(0)
+      localStorage.removeItem('upload-token')
     }
     
-    // 如果在有效期内
-    if (exp < Date.now()) {
-      // 如果原本状态没有值, 保存token和expires
-      if (!expires) {
-        setUploadToken(token)
-        setExpires(expires)
-      }
-    } else {
-      // 如果有数据, 清除数据(数据已过期)
-      if (exp) {
-        setUploadToken('')
-        setExpires('')
-        localStorage.removeItem('upload_token')
-      }
-      // 请求获取token和expires数据
-      const data = await reqUploadToken()
-      // 将过期时间修正为时间数值, 并提前一点
-      data.expires = Date.now() + expires * 1000 - 5 * 60 * 1000
-      // 保存数据到state和local中
-      setUploadToken(data.uploadToken)
-      setExpires(data.expires)
-      localStorage.setItem("upload_token", JSON.stringify(data))
-    }
+    // 请求获取token
+    const data = await reqUploadToken() // {uploadToken, expires=7200}
+    // 修正一下expires
+    data.expires = Date.now() + data.expires*1000 - 5 * 60 * 1000 // 提前刷新token
+    // 保存到state
+    setUploadToken(data.uploadToken)
+    setExpires(data.expires)
+    // 保存local中
+    localStorage.setItem('upload-token', JSON.stringify(data))
+
   }
 
   /* 
-  在提交上传请求前调用
-  可以返回布尔值或promise, 用于告知是否需要发请求
-  promise的方式用于检查中包含异步操作
-  如果是promise, 不发请求, 调用reject(), 如果是需要发请求, 调用resolve(file)
+  准备提交上传请求前回调
+    1. 如果文件大于1024 * 25, 不上传
+    2. 保证得到一个有效的token
   */
   const beforeUpload = (file, fileList) => {
-    return new Promise((resolve, reject) => {
-      // 如果文件超过了大小, 不提交请求
+    // 包含异步的请求, 所有必需是返回一个promise
+    return new Promise(async (resolve, reject) => {
+      // 1. 如果文件大于1024 * 25, 不上传
       if (file.size > MAX_VIDEO_SIZE) {
-        message.warn('上传视频不能超过35mb')
-        reject()
+        message.success('文件不能超过2.5MB')
+        reject() // 不发请求
         return
       }
 
-      // 获取到有效的token后, 才允许提交上传请求
-      getUploadToken().then(() => resolve(file))
+      await getUploadToken()
+      // 只有确保有了有效的token, 才开始上传
+      resolve(file)
     })
   }
 
   /* 
-  自定义上传视频方案
+  自定义上传
   */
-  const customRequest = ({file, onProgress, onSuccess, onError}) => {
+  const customRequest = ({
+    file, // 要上传的文件
+    onProgress, //指定上传进度的 : (event: { percent: number }): void
+    onError, // 指定上传出错 (event: Error, body?: Object): void
+    onSuccess, // 指定上传成功  (body: Object): void
+  }) => {
 
-    const key = nanoid(10) // 唯一标识
-    const putExtra = {
-      mimeType: ['video/*'] // 指定文件类型
+    const key = nanoid() // 唯一文件名
+    const token = uploadToken // 七牛给我的身份标识
+
+    const putExtra = { // 配置 指定文件类型
+      mimeType: "video/*",
     }
-    const config = {
-      region: qiniu.region.z2 // 代表华南地区
+    const config = {   //配置 服务器所在地区(华南)
+      region: qiniu.region.z2,
     }
 
-    // 创建上传文件对象
-    const observable = qiniu.upload(
-      file, // 要上传的文件
-      key, // 上传文件的名称(唯一)
-      uploadToken, // 身份标识token
-      putExtra, // 指定接收文件类型的配置
-      config // 指定服务器地区的配置
-    )
+    // 1. 创建一个用于上传的对象
+    const observable = qiniu.upload(file, key, token, putExtra, config)
 
-    // 创建上传的观察对象
+    // 2. 创建用于监视上传的对象
     const observer = {
-      next(res){ // 显示进度
-        console.log('next()', JSON.stringify(res))
+      next(res){
+        // 请求过程中多次回调
+        console.log('next', res)
+        // 得到当前上传的进度
         const percent = res.total.percent
+        console.log('----', percent)
+        // 显示进度
         onProgress({percent})
       },
-      error(err){ 
-        console.log('error()', err)
-        // 指定上传错误
+      error(err){
+        // 请求失败的回调
+        console.log('next', err)
+        // 通知Upload失败了
         onError(err)
-        message.error('上传视频失败')
+        message.error('上传失败了')
       },
-      complete(res){ 
+      complete(res){
+        // 请求成功的回调
         console.log('complete', res)
-        // 指定上传成功
+        // 通知Upload成功了
         onSuccess(res)
-        message.success("上传视频成功")
-        // 根据返回的视频key值, 确定视频的url
-        const video = qiniuConfig.prefix_url + res.key
-        // 保存到表单项数据中
-        props.onChange(video)
-        // 保存上传成功的标识值
-        setIsUploadSuccess(true)
+        message.success('上传成功了')
       }
     }
 
-    // 开始上传
-    const subscription = observable.subscribe(observer) // 上传开始
+    // 3. 上传开始
+    const subscription = observable.subscribe(observer)
 
-    // 保存用于取消订阅的对象
-    subRef.current = subscription
-  }
-
-  /* 
-  删除视频
-  */
-  const onRemove = () => {
-    // 上传取消
-    subRef.current && subRef.current.unsubscribe()
-    // 让表单保存video为''
-    props.onChange("")
-    // 标识没有上传成功的视频
-    setIsUploadSuccess(false)
+    
   }
 
   return (
@@ -163,13 +162,17 @@ export default function Upload (props) {
       listType="picture"
       beforeUpload={beforeUpload}
       customRequest={customRequest}
-      onRemove={onRemove}
     >
-      {
-        !isUploadSuccess && (
-          <Button icon={<UploadOutlined/>} disabled={!uploadToken}>上传视频</Button>
-        )
-      }
+      <Button icon={<UploadOutlined />}>上传视频</Button>
     </AntdUpload>
   )
 }
+
+/* 
+1. 请求我们的后台接口从七牛云获取身份标识token
+  发送请求的时机:
+    打开上传界面就发送
+  请求得到token后保存到locale和state中
+
+2. 请求七牛云上传文件(携带token)
+*/
